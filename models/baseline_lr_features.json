@@ -1,0 +1,18 @@
+[
+  "blosum62",
+  "ref_volume",
+  "alt_volume",
+  "delta_volume",
+  "abs_delta_volume",
+  "ref_hydro",
+  "alt_hydro",
+  "delta_hydro",
+  "abs_delta_hydro",
+  "ref_charge",
+  "alt_charge",
+  "delta_charge",
+  "charge_changed",
+  "involves_cys",
+  "involves_pro",
+  "involves_gly"
+]
