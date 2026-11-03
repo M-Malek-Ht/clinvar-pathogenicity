@@ -1,0 +1,14 @@
+# Data is downloaded by script, never committed
+data/raw/
+data/processed/
+*.gz
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
