@@ -1,0 +1,8 @@
+{
+  "source_url": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz",
+  "release_date_server": "Sun, 01 Nov 2026 14:17:51 GMT",
+  "downloaded_at": "2026-11-04T00:02:51",
+  "size_bytes": 457862838,
+  "md5": "d7e0d7e581e220100fc84ca64fe953ba",
+  "md5_vs_ncbi": "match"
+}
