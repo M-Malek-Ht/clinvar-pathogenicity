@@ -1,0 +1,46 @@
+43 columns
+
+  #  column                              example value
+  0  #AlleleID                           15041
+  1  Type                                Indel
+  2  Name                                NM_014855.3(AP5Z1):c.80_83delinsTGCTGTAAACTGTAACTGTAAA (p.Arg27_Ile28d
+  3  GeneID                              9907
+  4  GeneSymbol                          AP5Z1
+  5  HGNC_ID                             HGNC:22197
+  6  ClinicalSignificance                Pathogenic/Likely pathogenic
+  7  ClinSigSimple                       1
+  8  LastEvaluated                       Dec 17, 2024
+  9  RS# (dbSNP)                         397704705
+ 10  nsv/esv (dbVar)                     -
+ 11  RCVaccession                        RCV000000012|RCV005255549|RCV004998069
+ 12  PhenotypeIDS                        MONDO:MONDO:0013342,MedGen:C3150901,OMIM:613647,Orphanet:306511||MedGe
+ 13  PhenotypeList                       Hereditary spastic paraplegia 48|Macular dystrophy with or without ext
+ 14  Origin                              germline;unknown
+ 15  OriginSimple                        germline
+ 16  Assembly                            GRCh37
+ 17  ChromosomeAccession                 NC_000007.13
+ 18  Chromosome                          7
+ 19  Start                               4820844
+ 20  Stop                                4820847
+ 21  ReferenceAllele                     na
+ 22  AlternateAllele                     na
+ 23  Cytogenetic                         7p22.1
+ 24  ReviewStatus                        criteria provided, multiple submitters, no conflicts
+ 25  NumberSubmitters                    4
+ 26  Guidelines                          -
+ 27  TestedInGTR                         N
+ 28  OtherIDs                            ClinGen:CA215070,OMIM:613653.0001
+ 29  SubmitterCategories                 3
+ 30  VariationID                         2
+ 31  PositionVCF                         4820844
+ 32  ReferenceAlleleVCF                  GGAT
+ 33  AlternateAlleleVCF                  TGCTGTAAACTGTAACTGTAAA
+ 34  SomaticClinicalImpact               -
+ 35  SomaticClinicalImpactLastEvaluated  -
+ 36  ReviewStatusClinicalImpact          -
+ 37  Oncogenicity                        -
+ 38  OncogenicityLastEvaluated           -
+ 39  ReviewStatusOncogenicity            -
+ 40  SCVsForAggregateGermlineClassification SCV001451119|SCV005622007|SCV005909190
+ 41  SCVsForAggregateSomaticClinicalImpact -
+ 42  SCVsForAggregateOncogenicityClassification -
