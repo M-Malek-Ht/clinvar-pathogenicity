@@ -40,7 +40,9 @@ learning general rules of protein damage.
 | Gene-only reference (diagnostic) | Random | 0.931 ± 0.002 | 0.862 ± 0.004 | 0.500 |
 | Gene-only reference (diagnostic) | Gene | 0.500 | 0.296 | 0.500 |
 
-AUPRC of a random guess = 0.296. The test part is untouched and is used once, for the final results.
+AUPRC of a random guess = 0.296. The logistic regression is well calibrated on both splits
+(expected calibration error 0.018, seed 0), but rarely confident: its predictions range from
+0.07 to 0.80. The test part is untouched and is used once, for the final results.
 Full details: [`reports/baseline_summary.md`](reports/baseline_summary.md).
 
 ## Repository layout
@@ -78,6 +80,17 @@ python scripts/run_baseline.py      # train and evaluate the baseline   -> repor
 ```
 
 `environment-lock.yml` pins the exact package versions we used.
+
+### Walkthrough notebook
+
+[`notebooks/01_phase1_baseline.ipynb`](notebooks/01_phase1_baseline.ipynb) explains every step,
+with exploration plots, the tuning curve, results and calibration. It reads the outputs of the
+scripts above; set `RUN_PIPELINE = True` in its first cells to regenerate everything.
+
+> **Windows + VS Code:** open VS Code from an activated environment
+> (`conda activate clinvar`, then `code .` in the project folder). If VS Code starts the kernel
+> without activating the environment, Windows can load mismatched DLLs and the kernel crashes
+> on the first plot.
 
 ### Data snapshot
 
