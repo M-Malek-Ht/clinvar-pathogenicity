@@ -1,6 +1,7 @@
 # Data is downloaded by script, never committed
 data/raw/
-data/processed/
+data/processed/*
+!data/processed/variants.parquet
 *.gz
 
 # Python / Jupyter
