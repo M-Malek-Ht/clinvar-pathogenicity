@@ -32,6 +32,13 @@ def cpu_name():
     return platform.processor() or "unknown"
 
 
+def git_state():
+    """Current commit, flagged if the working copy has uncommitted changes."""
+    commit = run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"]) or "none"
+    dirty = run(["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=no"])
+    return f"{commit} (+ uncommitted changes)" if dirty else commit
+
+
 def os_name():
     """platform.platform() reports Windows 11 as 'Windows-10'; builds >= 22000 are Windows 11."""
     if platform.system() == "Windows":
@@ -77,7 +84,7 @@ def torch_rows():
 def main():
     rows = [
         ("Report generated", datetime.datetime.now().isoformat(timespec="seconds")),
-        ("Git commit", run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"]) or "none"),
+        ("Git commit", git_state()),
         ("OS", os_name()),
         ("CPU", cpu_name()),
         ("CPU cores (physical / logical)",

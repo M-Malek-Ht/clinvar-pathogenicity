@@ -78,7 +78,8 @@ def main():
     # Safety check: the gene split must never put the same gene on two sides.
     for seed in SEEDS:
         sides = pd.DataFrame({"gene": genes, "part": out[f"gene_s{seed}"]})
-        assert (sides.groupby("gene")["part"].nunique() == 1).all(), f"gene leak in seed {seed}"
+        if not (sides.groupby("gene")["part"].nunique() == 1).all():
+            raise RuntimeError(f"Gene leak in seed {seed}: a gene appears on two sides.")
 
     OUT_SPLITS.parent.mkdir(parents=True, exist_ok=True)
     out.to_parquet(OUT_SPLITS, index=False)
@@ -91,7 +92,7 @@ def main():
         print("\nWARNING - these parts are uneven (share or % pathogenic off by >3 points):")
         print(uneven[["split", "part", "share", "pathogenic"]].to_string(index=False))
 
-    md =["# Evaluation splits", "",
+    md = ["# Evaluation splits", "",
           f"Seeds: {SEEDS}. Target proportions 70 / 10 / 20 (train / val / test).", "",
           "| Split | Part | Variants | Share | % pathogenic | Genes | Genes also in train |",
           "|---|---|---:|---:|---:|---:|---:|"]

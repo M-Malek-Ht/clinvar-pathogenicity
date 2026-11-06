@@ -29,7 +29,8 @@ learning general rules of protein damage.
 | Initial baseline: logistic regression | Done |
 | Extra features (protein length, position, conservation), gradient boosting | Next |
 | Level 2: ESM-2 protein language model | Next |
-| Calibration, failure analysis, complexity analysis | Next |
+| Calibration of the baseline | Done |
+| Failure analysis, recalibration, complexity analysis | Next |
 
 ### Initial baseline (validation part, mean ± std over 5 seeds)
 
@@ -48,7 +49,9 @@ Full details: [`reports/baseline_summary.md`](reports/baseline_summary.md).
 ## Repository layout
 
 ```
-scripts/        the pipeline, run in the order below
+scripts/        the pipeline, run in the order below; inspect_clinvar.py (optional) lists the
+                raw file's columns -> reports/clinvar_columns.txt
+src/            shared code (from Phase 2 on; empty for now)
 reports/        every generated table, figure and record (committed)
   figures/      plots
 data/raw/       ClinVar download (not committed, ~460 MB)
@@ -61,9 +64,9 @@ notebooks/      walkthrough notebook
 
 ## Reproducing the results
 
-**Requirements:** Windows, macOS or Linux; [Miniconda](https://www.anaconda.com/download);
-an NVIDIA GPU is needed only for the ESM-2 stage (later). The machine we used is recorded in
-[`reports/environment.md`](reports/environment.md).
+**Requirements:** Windows, macOS or Linux; [Miniconda](https://www.anaconda.com/download).
+PyTorch and an NVIDIA GPU are needed only for the ESM-2 stage (later), not for Phase 1. The
+machine we used is recorded in [`reports/environment.md`](reports/environment.md).
 
 ### 1. Environment
 
@@ -72,10 +75,13 @@ git clone https://github.com/M-Malek-Ht/clinvar-pathogenicity.git
 cd clinvar-pathogenicity
 conda env create -f environment.yml
 conda activate clinvar
-pip install torch --index-url https://download.pytorch.org/whl/cu128   # needed later for ESM-2
+pip install torch --index-url https://download.pytorch.org/whl/cu128   # later, for ESM-2 (NVIDIA GPU)
 ```
 
-`environment-lock.yml` pins the exact package versions we used (exported on Windows 11).
+`environment.yml` pins the minor versions of the main packages we used (e.g. `pandas=3.1`), on any platform. Without an
+NVIDIA GPU (e.g. on macOS), install PyTorch with `pip install torch` instead.
+On **Windows**, `conda env create -f environment-lock.yml` reproduces our environment exactly,
+every package and build included (it was exported on Windows 11 and only works there).
 
 ### 2a. Quick reproduction — exact results, no download (about 2 minutes)
 
@@ -87,7 +93,9 @@ python scripts/run_baseline.py      # train and evaluate the baseline   -> repor
 ```
 
 The train/val/test splits are committed in `data/splits/`, so `make_splits.py` does not need to be
-run (it would regenerate the same splits).
+run (it would regenerate the same splits). These two scripts overwrite the committed baseline
+outputs in `reports/` and `models/`; the metrics come out the same, while timings depend on the
+machine.
 
 ### 2b. Full reproduction — from the raw ClinVar file
 
@@ -112,8 +120,9 @@ python scripts/run_baseline.py      # train and evaluate the baseline   -> repor
 | Logistic regression, `reports/baseline_summary.md` | AUROC 0.731 (random) and 0.732 (gene) |
 | Gene-only reference | AUROC 0.931 (random) and 0.500 (gene) |
 
-Tiny differences in the last decimal can appear with other package versions; use
-`environment-lock.yml` for an identical setup.
+Tiny differences in the last decimal can appear with other package versions, and on another
+machine the tuning may pick a different `C` in a run without changing the results (the tuning
+curve is flat).
 
 ### Walkthrough notebook
 
@@ -130,7 +139,7 @@ ClinVar file in `data/raw/`.
 
 ### Data snapshot
 
-ClinVar replaces its files every month, so the project is pinned to one snapshot:
+NCBI regularly replaces this file with newer releases, so the project is pinned to one snapshot:
 
 | | |
 |---|---|
@@ -144,6 +153,8 @@ MD5 above, stopping with an error if it differs. Without it, the script download
 file:
 
 - if it is still the same release, it is used;
+- if the download does not match NCBI's own published checksum, it is deleted as broken and the
+  script stops (run it again);
 - if NCBI has published a newer release, it is saved separately as
   `variant_summary_NEWER.txt.gz` and **not** used, the snapshot record is left unchanged, and the
   script stops with an error. Use the quick reproduction (2a) to get our exact results.
@@ -165,7 +176,8 @@ From 9,345,867 rows to **199,374 missense variants** in **15,272 genes**
 3. Missense only; start-codon changes removed
 4. Label Pathogenic / Likely pathogenic (1) or Benign / Likely benign (0); VUS and conflicting dropped
 5. At least one ClinVar review star
-6. One row per protein change; copies with contradictory labels dropped
+6. One row per protein change: 1,402 duplicates removed, and the one protein change with
+   contradictory labels (2 records) dropped
 
 Counts after every step: [`reports/filtering_counts.md`](reports/filtering_counts.md).
 
@@ -178,12 +190,19 @@ condition names and existing predictor scores (several were trained on ClinVar) 
 `models/baseline_lr_random_s0.joblib` and `models/baseline_lr_gene_s0.joblib` are scikit-learn
 pipelines (scaler + logistic regression). The feature order is in `models/baseline_lr_features.json`.
 
+After the quick reproduction (which creates `features_swap.parquet`):
+
 ```python
+import json
+from pathlib import Path
 import joblib, pandas as pd
 model = joblib.load("models/baseline_lr_gene_s0.joblib")
-X = pd.read_parquet("data/processed/features_swap.parquet")
-p = model.predict_proba(X.drop(columns=["variation_id", "gene", "label"]))[:, 1]
+features = json.loads(Path("models/baseline_lr_features.json").read_text())
+X = pd.read_parquet("data/processed/features_swap.parquet")[features].to_numpy()
+p = model.predict_proba(X)[:, 1]   # probability of pathogenic
 ```
+
+The models were saved with scikit-learn 1.9.1; load them with the same version.
 
 ## References
 

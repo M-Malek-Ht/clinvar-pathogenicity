@@ -11,8 +11,8 @@ Validation prevalence (= AUPRC of a random guess): 0.296
 
 ## Logistic regression: settings and cost
 
-- Chosen C per run: [0.001, 0.01, 0.1, 10.0, 100.0]
-- Training time incl. tuning (CPU): 2.3 s on average
-- Inference: 0.288 ms per 1,000 variants
+- Values of C chosen across the 10 runs: [0.001, 0.01, 0.1, 10.0, 100.0] (the tuning curve is flat)
+- Training time incl. tuning (CPU): 1.7 s on average (timings depend on the machine)
+- Inference: 0.189 ms per 1,000 variants
 - Model size: 1.6 KB
 - Per-gene AUROC uses val genes that contain both classes (on average 616 genes).

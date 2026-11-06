@@ -5,6 +5,10 @@ Outputs:
   data/processed/variants.parquet   one row per missense variant, with its label
   reports/filtering_counts.md       how many variants survive each filtering step
 
+Before filtering, the ClinVar file is checked against the MD5 recorded in
+reports/data_snapshot.json; the script stops if the record is missing or the file differs
+(override deliberately with --allow-different-snapshot).
+
 Leakage note: 'stars' and 'last_evaluated' are kept ONLY for filtering and for the
 failure-analysis slices. They must never be used as model features (proposal section 4).
 """
@@ -61,8 +65,9 @@ def check_snapshot():
         sys.exit(f"ERROR: {RAW} not found. Run scripts/download_clinvar.py first, or use the "
                  "committed data/processed/variants.parquet (README, quick reproduction).")
     if not MANIFEST.exists():
-        print(f"Note: no {MANIFEST.name}; cannot verify the snapshot.")
-        return
+        sys.exit(f"ERROR: snapshot record missing: {MANIFEST}\n"
+                 "It is created by scripts/download_clinvar.py and committed to the repository; "
+                 "without it the ClinVar file cannot be verified. Stopping.")
     print("Verifying the ClinVar file against the recorded snapshot...")
     h = hashlib.md5()
     with open(RAW, "rb") as f:
@@ -86,7 +91,7 @@ def main():
 
     def log(step, d):
         counts.append((step, len(d)))
-        print(f"{step:<62}{len(d):>11,}")
+        print(f"{step:<68}{len(d):>11,}")
 
     print("Reading the ClinVar file (takes 1-2 minutes)...")
     df = pd.read_csv(RAW, sep="\t", usecols=COLUMNS, dtype=str, low_memory=False)
@@ -121,13 +126,24 @@ def main():
     df = df[df["stars"].fillna(0) >= 1]
     log("5. At least one review star", df)
 
-    # The same protein change can come from different DNA changes. Keep one row per
-    # protein change; if copies disagree on the label, drop them all.
+    # The same protein change can come from different DNA changes. If its copies disagree
+    # on the label, drop all of them; if they agree, keep one row. Both are counted.
     df["label"] = df["ClinicalSignificance"].isin(PATHOGENIC).astype(int)
     key = ["gene", "protein_pos", "ref_aa", "alt_aa"]
     agree = df.groupby(key)["label"].transform("nunique") == 1
+    n_conflict_rows = int((~agree).sum())
+    n_conflict_changes = int(df.loc[~agree, key].drop_duplicates().shape[0])
+    n_before_dedup = int(agree.sum())
     df = df[agree].drop_duplicates(key)
-    log("6. One row per protein change (contradictory copies dropped)", df)
+    n_duplicate_rows = n_before_dedup - len(df)
+    log("6. One row per protein change (duplicates and conflicts removed)", df)
+    step6 = [
+        f"Rows removed because their protein change had contradictory labels: "
+        f"{n_conflict_rows:,} (from {n_conflict_changes:,} protein change(s))",
+        f"Duplicate rows of a protein change whose copies agree (one row kept): "
+        f"{n_duplicate_rows:,}",
+    ]
+    print("   " + "\n   ".join(step6))
 
     out = pd.DataFrame({
         "variation_id": df["VariationID"],
@@ -162,6 +178,7 @@ def main():
           "Source: reports/data_snapshot.json", "",
           "| Step | Variants remaining |", "|---|---:|"]
     md += [f"| {s} | {n:,} |" for s, n in counts]
+    md += ["", "Step 6 in detail:", ""] + [f"- {s}" for s in step6]
     md += ["", "## Final dataset", ""] + [f"- {s}" for s in summary]
     OUT_COUNTS.write_text("\n".join(md) + "\n", encoding="utf-8")
 

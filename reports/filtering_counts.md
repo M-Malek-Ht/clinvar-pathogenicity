@@ -11,7 +11,12 @@ Source: reports/data_snapshot.json
 |    Start-codon changes (p.Met1...) removed | 2,567,977 |
 | 4. Label is Pathogenic/Likely pathogenic or Benign/Likely benign | 216,739 |
 | 5. At least one review star | 200,778 |
-| 6. One row per protein change (contradictory copies dropped) | 199,374 |
+| 6. One row per protein change (duplicates and conflicts removed) | 199,374 |
+
+Step 6 in detail:
+
+- Rows removed because their protein change had contradictory labels: 2 (from 1 protein change(s))
+- Duplicate rows of a protein change whose copies agree (one row kept): 1,402
 
 ## Final dataset
 

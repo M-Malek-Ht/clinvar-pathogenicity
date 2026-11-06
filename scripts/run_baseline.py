@@ -66,7 +66,8 @@ def evaluate(genes, y, p):
             "genes_in_per_gene_auroc": n_genes}
 
 
-def fit_logreg(X, y, groups, seed):
+def fit_logreg(X, y, groups):
+    """Tune C by gene-grouped CV inside the training data; return best model, C, seconds."""
     pipe = make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000))
     search = GridSearchCV(pipe, {"logisticregression__C": C_GRID},
                           scoring="average_precision", cv=GroupKFold(n_splits=5), n_jobs=-1)
@@ -87,8 +88,9 @@ def gene_prior(train_genes, train_y, query_genes, strength=1.0):
 def main():
     feats = pd.read_parquet(FEATURES)
     splits = pd.read_parquet(SPLITS)
-    assert (feats["variation_id"].to_numpy() == splits["variation_id"].to_numpy()).all(), \
-        "features and splits are not in the same order - rerun make_splits.py"
+    if not (feats["variation_id"].to_numpy() == splits["variation_id"].to_numpy()).all():
+        raise RuntimeError("Features and splits are not in the same order: rerun "
+                           "build_features.py, then make_splits.py.")
     feature_cols = [c for c in feats.columns if c not in ("variation_id", "gene", "label")]
     X, y, genes = feats[feature_cols].to_numpy(), feats["label"].to_numpy(), feats["gene"].to_numpy()
 
@@ -101,7 +103,7 @@ def main():
             part = splits[f"{split_type}_s{seed}"].to_numpy()
             tr, va = part == "train", part == "val"
 
-            model, best_c, train_s = fit_logreg(X[tr], y[tr], genes[tr], seed)
+            model, best_c, train_s = fit_logreg(X[tr], y[tr], genes[tr])
             t0 = time.perf_counter()
             p = model.predict_proba(X[va])[:, 1]
             infer_ms = (time.perf_counter() - t0) / va.sum() * 1000 * 1000  # per 1,000 variants
@@ -140,8 +142,10 @@ def main():
         lines.append(f"| {model_name} | {split_type} | " + " | ".join(cells) + " |")
     lr = res[res["model"] == "logreg"]
     lines += ["", "## Logistic regression: settings and cost", "",
-              f"- Chosen C per run: {sorted(lr['best_C'].unique().tolist())}",
-              f"- Training time incl. tuning (CPU): {lr['train_seconds'].mean():.1f} s on average",
+              f"- Values of C chosen across the {len(lr)} runs: "
+              f"{sorted(lr['best_C'].unique().tolist())} (the tuning curve is flat)",
+              f"- Training time incl. tuning (CPU): {lr['train_seconds'].mean():.1f} s on average "
+              f"(timings depend on the machine)",
               f"- Inference: {lr['infer_ms_per_1000'].mean():.3f} ms per 1,000 variants",
               f"- Model size: {lr['size_kb'].mean():.1f} KB",
               f"- Per-gene AUROC uses val genes that contain both classes "
@@ -194,7 +198,7 @@ def main():
     (MODELS / "baseline_lr_features.json").write_text(json.dumps(feature_cols, indent=2))
 
     print("\n" + "\n".join(lines))
-    print(f"\nSaved results, summary, coefficients, 2 figures and 2 models.")
+    print("\nSaved results, summary, coefficients, 2 figures and 2 models.")
 
 
 if __name__ == "__main__":
