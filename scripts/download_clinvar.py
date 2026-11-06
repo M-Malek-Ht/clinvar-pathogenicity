@@ -6,12 +6,14 @@ The project is pinned to ONE snapshot, recorded in reports/data_snapshot.json (r
 size, MD5). That record is committed and is never overwritten once it exists.
 
 What the script does:
-  1. data/raw/variant_summary.txt.gz exists  -> check it against the recorded MD5.
+  1. data/raw/variant_summary.txt.gz exists  -> check it against the recorded MD5;
+                                                stop with an error if it differs.
   2. It does not exist                        -> download the current file from NCBI, then:
        - MD5 matches the record   -> saved as data/raw/variant_summary.txt.gz, ready to use.
        - MD5 differs (NCBI has published a newer release since our snapshot)
                                   -> saved as data/raw/variant_summary_NEWER.txt.gz, which the
-                                     pipeline does NOT use, and a warning explains the options.
+                                     pipeline does NOT use; the script explains the options
+                                     and stops with an error.
   3. No record exists yet (first ever run)    -> download and create the record.
 
 To reproduce our exact results without the original file, use the committed filtered dataset
@@ -20,6 +22,7 @@ data/processed/variants.parquet and start from build_features.py (see README).
 import datetime
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 import requests
@@ -52,9 +55,9 @@ def verify_existing():
     elif md5 == expected:
         print("OK: file matches the recorded snapshot (MD5 identical).")
     else:
-        print("MISMATCH: this file is NOT the recorded snapshot.\n"
-              f"  expected {expected}\n  found    {md5}\n"
-              "Results built from it will differ from the project's results.")
+        sys.exit("ERROR: this file is NOT the recorded snapshot.\n"
+                 f"  expected {expected}\n  found    {md5}\n"
+                 "Results built from it would differ from the project's results. Stopping.")
 
 
 def download(target):
@@ -121,6 +124,7 @@ and {MANIFEST.name} was left unchanged. Options:
   - Use the original snapshot: get the file with the MD5 above and put it at {RAW}.
   - Deliberately use the newer data: rename {NEWER.name} to {RAW.name}. Every count and
     result will then differ slightly from the reported ones.""")
+    sys.exit(1)  # stop here, so a chained run cannot continue with the wrong data
 
 
 if __name__ == "__main__":

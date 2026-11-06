@@ -96,7 +96,9 @@ def main():
           "| Split | Part | Variants | Share | % pathogenic | Genes | Genes also in train |",
           "|---|---|---:|---:|---:|---:|---:|"]
     for r in s.itertuples():
-        overlap = "-" if r.genes_also_in_train is None else f"{r.genes_also_in_train:,}"
+        # pandas stores the train rows' empty value as NaN, so test with pd.isna
+        overlap = ("-" if pd.isna(r.genes_also_in_train)
+                   else f"{int(r.genes_also_in_train):,}")
         md.append(f"| {r.split} | {r.part} | {r.variants:,} | {r.share:.1%} | "
                   f"{r.pathogenic:.1%} | {r.genes:,} | {overlap} |")
     OUT_SUMMARY.write_text("\n".join(md) + "\n", encoding="utf-8")
@@ -104,6 +106,8 @@ def main():
     show = s[s["split"].str.endswith("_s0")].copy()
     show["share"] = show["share"].map("{:.1%}".format)
     show["pathogenic"] = show["pathogenic"].map("{:.1%}".format)
+    show["genes_also_in_train"] = show["genes_also_in_train"].map(
+        lambda v: "-" if pd.isna(v) else f"{int(v):,}")
     print("\nSeed 0 (all seeds are in reports/splits_summary.md):")
     print(show.drop(columns="split").assign(split=show["split"]).set_index(["split", "part"])
           .to_string())

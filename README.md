@@ -140,13 +140,18 @@ ClinVar replaces its files every month, so the project is pinned to one snapshot
 | MD5 | `d7e0d7e581e220100fc84ca64fe953ba` |
 
 If you have the snapshot, place it in `data/raw/` and `download_clinvar.py` checks it against the
-MD5 above. Without it, the script downloads NCBI's current file:
+MD5 above, stopping with an error if it differs. Without it, the script downloads NCBI's current
+file:
 
 - if it is still the same release, it is used;
 - if NCBI has published a newer release, it is saved separately as
-  `variant_summary_NEWER.txt.gz` and **not** used, and the snapshot record is left unchanged.
-  Use the quick reproduction (2a) to get our exact results, or rename the file deliberately to
-  rebuild with newer data (all counts and results will then differ slightly).
+  `variant_summary_NEWER.txt.gz` and **not** used, the snapshot record is left unchanged, and the
+  script stops with an error. Use the quick reproduction (2a) to get our exact results.
+
+`build_dataset.py` also verifies the file against the recorded MD5 before filtering and refuses
+to run on any other snapshot. To rebuild deliberately with newer data, rename the file to
+`variant_summary.txt.gz` and run `python scripts/build_dataset.py --allow-different-snapshot`
+(all counts and results will then differ slightly from ours).
 
 ClinVar data are public domain (NCBI), which allows us to share the filtered dataset.
 

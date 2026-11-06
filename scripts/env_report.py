@@ -32,6 +32,14 @@ def cpu_name():
     return platform.processor() or "unknown"
 
 
+def os_name():
+    """platform.platform() reports Windows 11 as 'Windows-10'; builds >= 22000 are Windows 11."""
+    if platform.system() == "Windows":
+        build = int(platform.version().split(".")[-1])
+        return f"Windows {11 if build >= 22000 else 10} (build {build})"
+    return platform.platform()
+
+
 def gpu_driver():
     out = run(["nvidia-smi", "--query-gpu=name,memory.total,driver_version",
                "--format=csv,noheader"])
@@ -70,7 +78,7 @@ def main():
     rows = [
         ("Report generated", datetime.datetime.now().isoformat(timespec="seconds")),
         ("Git commit", run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"]) or "none"),
-        ("OS", platform.platform()),
+        ("OS", os_name()),
         ("CPU", cpu_name()),
         ("CPU cores (physical / logical)",
          f"{psutil.cpu_count(logical=False)} / {psutil.cpu_count(logical=True)}"),

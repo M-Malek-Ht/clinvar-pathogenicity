@@ -8,6 +8,9 @@ Outputs:
 Leakage note: 'stars' and 'last_evaluated' are kept ONLY for filtering and for the
 failure-analysis slices. They must never be used as model features (proposal section 4).
 """
+import hashlib
+import json
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -16,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw" / "variant_summary.txt.gz"
 OUT_DATA = ROOT / "data" / "processed" / "variants.parquet"
 OUT_COUNTS = ROOT / "reports" / "filtering_counts.md"
+MANIFEST = ROOT / "reports" / "data_snapshot.json"
 
 COLUMNS = ["VariationID", "Type", "Name", "ClinicalSignificance", "ReviewStatus",
            "LastEvaluated", "Assembly", "Chromosome", "PositionVCF",
@@ -47,7 +51,37 @@ NAME_RE = (r"^(?P<transcript>[^(]+)\((?P<gene>[^)]+)\):c\.\S+ "
            r"\(p\.(?P<ref_aa>[A-Z][a-z]{2})(?P<protein_pos>\d+)(?P<alt_aa>[A-Z][a-z]{2})\)$")
 
 
+def check_snapshot():
+    """Refuse to run on a ClinVar file other than the recorded snapshot.
+
+    Override deliberately (e.g. to rebuild with a newer release) with:
+        python scripts/build_dataset.py --allow-different-snapshot
+    """
+    if not RAW.exists():
+        sys.exit(f"ERROR: {RAW} not found. Run scripts/download_clinvar.py first, or use the "
+                 "committed data/processed/variants.parquet (README, quick reproduction).")
+    if not MANIFEST.exists():
+        print(f"Note: no {MANIFEST.name}; cannot verify the snapshot.")
+        return
+    print("Verifying the ClinVar file against the recorded snapshot...")
+    h = hashlib.md5()
+    with open(RAW, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    expected = json.loads(MANIFEST.read_text())["md5"]
+    if h.hexdigest() == expected:
+        print("OK: file matches the recorded snapshot.")
+    elif "--allow-different-snapshot" in sys.argv:
+        print("WARNING: file differs from the recorded snapshot; continuing as requested. "
+              "Counts and results will differ from the reported ones.")
+    else:
+        sys.exit(f"ERROR: {RAW.name} is not the recorded snapshot "
+                 f"(expected MD5 {expected}, found {h.hexdigest()}). Stopping.\n"
+                 "Use --allow-different-snapshot to process it anyway.")
+
+
 def main():
+    check_snapshot()
     counts = []
 
     def log(step, d):
