@@ -1,0 +1,15 @@
+{
+  "model": "facebook/esm2_t12_35M_UR50D",
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "proteins": 14743,
+  "windows": 18282,
+  "variants": 185104,
+  "embedding_dim": 480,
+  "seconds": 210.5,
+  "ms_per_1000_variants": 1137.0,
+  "wild_type_residue_matches": 185104,
+  "missing_scores": 0
+}
