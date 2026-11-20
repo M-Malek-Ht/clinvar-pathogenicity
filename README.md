@@ -34,7 +34,7 @@ Every model was refit on train + validation and scored once on the held-out test
 | L2 trees + ESM-2 score | 0.892 ± 0.001 | 0.841 ± 0.011 | 0.758 |
 
 - On unseen genes the ESM-2 classifier beats the best classical model by **+0.132 AUROC
-  (95% CI +0.106 to +0.160)**, with no drop from the random to the gene split, and is well
+  (seed 0, 95% CI +0.106 to +0.160)**, with no drop from the random to the gene split, and is well
   calibrated (ECE 0.006).
 - Its extra cost is one ESM-2 (35M parameters) pass over all 14,743 mapped proteins:
   **210 s on an RTX 5070 Ti laptop GPU**. The classifier itself is 14 KB.
