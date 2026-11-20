@@ -17,5 +17,7 @@ dependencies:
   - ipykernel=7.4
   - notebook=7.6
   - pip
+  - pip:
+      - transformers==5.23.0   # ESM-2 (Phase 2)
 # PyTorch is installed separately with pip (CUDA 12.8+ build, required for RTX 50-series):
 #   pip install torch --index-url https://download.pytorch.org/whl/cu128
