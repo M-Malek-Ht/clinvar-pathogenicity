@@ -1,0 +1,9 @@
+{
+  "source_url": "https://rest.uniprot.org/uniprotkb/stream?query=(reviewed:true)%20AND%20(organism_id:9606)&format=tsv&fields=accession,gene_primary,length,sequence",
+  "uniprot_release": "2026_04",
+  "downloaded_at": "2026-11-20T10:49:27",
+  "md5": "1eb653edf190b3587ac72feb1f23be4b",
+  "rows": 20429,
+  "rows_with_gene_name": 20281,
+  "genes_with_more_than_one_entry": 93
+}
