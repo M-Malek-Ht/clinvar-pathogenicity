@@ -80,7 +80,7 @@ def main():
               f"- Mapped proteins longer than {ESM_MAX_LEN} residues: "
               f"{m.loc[long_prot, 'accession'].nunique():,} proteins holding "
               f"{long_prot.sum():,} variants ({long_prot.sum() / mapped.sum():.1%} of mapped). "
-              "ESM-2 will read these in a window centred on the variant.",
+              "ESM-2 reads these in overlapping 1,022-residue windows (step 511), each variant from the window whose centre is closest to it.",
               f"- Genes with both classes among mapped variants: "
               f"{(v[mapped].groupby('gene')['label'].nunique() == 2).sum():,}",
               f"- Runtime: {time.perf_counter() - t0:.1f} s"]

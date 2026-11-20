@@ -133,7 +133,7 @@ python scripts/run_gbm_position.py                                # + protein le
 python scripts/esm_scores.py --model esm2_t12_35M_UR50D           # ESM-2 on every protein (GPU)    (~4 min)
 python scripts/run_esm_models.py --model esm2_t12_35M_UR50D       # zero-shot, embedding + LR, trees + ESM (~3 min)
 python scripts/failure_analysis.py --model esm2_t12_35M_UR50D     # slices, recalibration, abstention (~3 min)
-python scripts/final_test.py --model esm2_t12_35M_UR50D           # the ONLY use of the test part  (~20 min)
+python scripts/final_test.py --model esm2_t12_35M_UR50D           # the ONLY use of the test part  (~40 min)
 ```
 
 UniProt is updated every 8 weeks; the release we used (2026_04) and its MD5 are recorded in
